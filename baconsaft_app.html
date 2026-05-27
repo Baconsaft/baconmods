@@ -75,7 +75,7 @@ body {
 }
 .card-searchbar input {
   flex: 1; border: none; background: transparent;
-  outline: none; font-size: 13px; color: #1a4f7a;
+  outline: none; font-size: 13px; color: #1565c0;
   margin: 0 8px; font-family: inherit;
 }
 .search-icon-btn {
@@ -105,7 +105,7 @@ body {
 }
 .search-bar-big input {
   flex: 1; border: none; background: transparent;
-  outline: none; font-size: 15px; color: #1a4f7a;
+  outline: none; font-size: 15px; color: #1565c0;
   margin: 0 10px; font-family: inherit;
 }
 .search-icon-btn-big {
@@ -159,6 +159,16 @@ body {
   font-size: 12px; color: #2a6fa8;
   letter-spacing: 0.1em; opacity: 0.75; font-weight: 600;
 }
+input::placeholder { color: #7ab0d8; opacity: 1; }
+.version-select {
+  width: 100%; border: 1.5px solid rgba(30,140,220,0.3);
+  border-radius: 8px; padding: 6px 10px;
+  background: rgba(255,255,255,0.8); color: #1565c0;
+  font-size: 12px; font-family: inherit; outline: none;
+  cursor: pointer; margin-top: 4px;
+}
+.version-select:disabled { opacity: 0.6; cursor: not-allowed; }
+input { color: #1565c0; }
 </style>
 </head>
 <body>
@@ -410,6 +420,67 @@ function formatNum(n) {
   return n;
 }
 
+const versionCache = {};
+
+async function loadVersions(projectId, gameSelEl, loaderSelEl) {
+  gameSelEl.disabled = true;
+  loaderSelEl.disabled = true;
+  gameSelEl.innerHTML = '<option>Lädt...</option>';
+  loaderSelEl.innerHTML = '<option>Lädt...</option>';
+
+  if (!versionCache[projectId]) {
+    try {
+      const res = await fetch(`https://api.modrinth.com/v2/project/${projectId}/version`);
+      versionCache[projectId] = await res.json();
+    } catch(e) {
+      gameSelEl.innerHTML = '<option>Fehler</option>';
+      loaderSelEl.innerHTML = '<option>Fehler</option>';
+      gameSelEl.disabled = false; loaderSelEl.disabled = false;
+      return;
+    }
+  }
+
+  const versions = versionCache[projectId];
+
+  // Unique game versions
+  const gameVersions = [...new Set(versions.flatMap(v => v.game_versions))].sort((a,b) => b.localeCompare(a, undefined, {numeric:true}));
+  gameSelEl.innerHTML = '<option value="">MC-Version...</option>' + gameVersions.map(g => `<option value="${g}">${g}</option>`).join('');
+  gameSelEl.disabled = false;
+
+  // Unique loaders
+  const loaders = [...new Set(versions.flatMap(v => v.loaders))];
+  loaderSelEl.innerHTML = '<option value="">Loader...</option>' + loaders.map(l => `<option value="${l}">${l.charAt(0).toUpperCase()+l.slice(1)}</option>`).join('');
+  loaderSelEl.disabled = false;
+}
+
+function getDownloadUrlForSelection(projectId, gameVer, loader) {
+  const versions = versionCache[projectId];
+  if (!versions) return null;
+  const match = versions.find(v =>
+    (!gameVer || v.game_versions.includes(gameVer)) &&
+    (!loader || v.loaders.includes(loader))
+  );
+  if (!match) return null;
+  const file = match.files.find(f => f.primary) || match.files[0];
+  return file ? file.url : null;
+}
+
+function downloadSelected(projectId, gameSelId, loaderSelId, btnEl) {
+  const gameVer = document.getElementById(gameSelId).value;
+  const loader = document.getElementById(loaderSelId).value;
+  const url = getDownloadUrlForSelection(projectId, gameVer, loader);
+  if (!url) {
+    btnEl.textContent = 'Keine passende Version!';
+    setTimeout(() => { btnEl.textContent = '⬇ Herunterladen'; }, 2500);
+    return;
+  }
+  const a = document.createElement('a');
+  a.href = url; a.download = ''; a.target = '_blank';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  btnEl.textContent = '✓ Download gestartet!';
+  setTimeout(() => { btnEl.textContent = '⬇ Herunterladen'; }, 3000);
+}
+
 function renderResults(container, hits) {
   if (!hits || hits.length === 0) {
     container.innerHTML = '<p class="no-results">Keine Ergebnisse gefunden.</p>';
@@ -417,14 +488,28 @@ function renderResults(container, hits) {
   }
   container.innerHTML = hits.map(h => {
     const icon = h.icon_url ? `<img class="mod-icon" src="${h.icon_url}" alt="${h.title}" onerror="this.style.display='none'">` : '';
-    const dlUrl = `https://modrinth.com/${h.project_type}/${h.slug}`;
+    const modrinthUrl = `https://modrinth.com/${h.project_type}/${h.slug}`;
+    const gId = `gsel-${h.project_id}`;
+    const lId = `lsel-${h.project_id}`;
+    const bId = `btn-${h.project_id}`;
     return `<div class="result-card">
       ${icon}
       <div class="mod-name">${h.title}</div>
       <div class="mod-author">von ${h.author}</div>
       <div class="mod-desc">${h.description}</div>
       <div class="mod-downloads">⬇ ${formatNum(h.downloads)} Downloads</div>
-      <a class="download-btn" href="${dlUrl}" target="_blank">Auf Modrinth öffnen ↗</a>
+      <select class="version-select" id="${gId}"
+        onfocus="if(!this.dataset.loaded){this.dataset.loaded=1;loadVersions('${h.project_id}',this,document.getElementById('${lId}'))}">
+        <option>MC-Version...</option>
+      </select>
+      <select class="version-select" id="${lId}" style="margin-top:6px">
+        <option>Loader...</option>
+      </select>
+      <button class="download-btn" id="${bId}"
+        onclick="downloadSelected('${h.project_id}','${gId}','${lId}',this)">
+        ⬇ Herunterladen
+      </button>
+      <a class="download-btn" href="${modrinthUrl}" target="_blank" style="margin-top:-4px;opacity:0.7;font-size:11px">Auf Modrinth ansehen ↗</a>
     </div>`;
   }).join('');
 }
