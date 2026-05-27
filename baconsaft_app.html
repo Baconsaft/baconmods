@@ -160,14 +160,63 @@ body {
   letter-spacing: 0.1em; opacity: 0.75; font-weight: 600;
 }
 input::placeholder { color: #7ab0d8; opacity: 1; }
-.version-select {
-  width: 100%; border: 1.5px solid rgba(30,140,220,0.3);
-  border-radius: 8px; padding: 6px 10px;
-  background: rgba(255,255,255,0.8); color: #1565c0;
-  font-size: 12px; font-family: inherit; outline: none;
-  cursor: pointer; margin-top: 4px;
+.selectors-row { display: flex; gap: 8px; width: 100%; margin-top: 8px; }
+.custom-select { flex: 1; position: relative; font-family: inherit; }
+.custom-select .cs-btn {
+  width: 100%; padding: 7px 30px 7px 12px;
+  background: rgba(255,255,255,0.72);
+  border: 1.5px solid rgba(30,140,220,0.35);
+  border-radius: 10px; color: #1565c0;
+  font-size: 12px; font-family: inherit;
+  cursor: pointer; text-align: left;
+  position: relative; transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(30,100,200,0.08);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.version-select:disabled { opacity: 0.6; cursor: not-allowed; }
+.custom-select .cs-btn::after {
+  content: '';
+  position: absolute; right: 10px; top: 50%;
+  transform: translateY(-50%);
+  width: 0; height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid #1565c0;
+  transition: transform 0.2s;
+}
+.custom-select.open .cs-btn::after { transform: translateY(-50%) rotate(180deg); }
+.custom-select .cs-btn:hover {
+  border-color: rgba(30,140,220,0.65);
+  box-shadow: 0 0 14px rgba(30,140,220,0.25), 0 2px 8px rgba(30,100,200,0.12);
+  background: rgba(255,255,255,0.88);
+}
+.custom-select.disabled .cs-btn { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+.cs-dropdown {
+  display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+  background: rgba(220,238,255,0.97);
+  border: 1.5px solid rgba(30,140,220,0.4);
+  border-radius: 10px; z-index: 999;
+  max-height: 200px; overflow-y: auto;
+  box-shadow: 0 8px 28px rgba(30,100,200,0.18);
+  backdrop-filter: blur(8px);
+}
+.custom-select.open .cs-dropdown { display: block; }
+.cs-dropdown::-webkit-scrollbar { width: 5px; }
+.cs-dropdown::-webkit-scrollbar-track { background: transparent; }
+.cs-dropdown::-webkit-scrollbar-thumb { background: rgba(30,140,220,0.3); border-radius: 10px; }
+.cs-option {
+  padding: 8px 14px; font-size: 12px; color: #1565c0;
+  cursor: pointer; transition: background 0.15s, box-shadow 0.15s;
+  border-radius: 8px; margin: 2px 4px;
+}
+.cs-option:hover {
+  background: rgba(30,140,220,0.15);
+  box-shadow: inset 0 0 10px rgba(30,140,220,0.1), 0 0 6px rgba(30,140,220,0.15);
+  color: #0d3f8a;
+}
+.cs-option.selected {
+  background: rgba(30,140,220,0.22);
+  font-weight: 600;
+}
 input { color: #1565c0; }
 </style>
 </head>
@@ -422,35 +471,77 @@ function formatNum(n) {
 
 const versionCache = {};
 
-async function loadVersions(projectId, gameSelEl, loaderSelEl) {
-  gameSelEl.disabled = true;
-  loaderSelEl.disabled = true;
-  gameSelEl.innerHTML = '<option>Lädt...</option>';
-  loaderSelEl.innerHTML = '<option>Lädt...</option>';
+// Close all dropdowns when clicking outside
+document.addEventListener('click', e => {
+  if (!e.target.closest('.custom-select')) {
+    document.querySelectorAll('.custom-select.open').forEach(el => el.classList.remove('open'));
+  }
+});
+
+function csToggle(id) {
+  const wrap = document.getElementById(id + '-wrap');
+  if (wrap.classList.contains('disabled')) return;
+  const isOpen = wrap.classList.contains('open');
+  document.querySelectorAll('.custom-select.open').forEach(el => el.classList.remove('open'));
+  if (!isOpen) wrap.classList.add('open');
+}
+
+function csSetValue(wrapId, value, label) {
+  const wrap = document.getElementById(wrapId + '-wrap');
+  const btn = document.getElementById(wrapId + '-btn');
+  btn.textContent = label;
+  btn.dataset.value = value;
+  wrap.classList.remove('open');
+  // update selected state
+  wrap.querySelectorAll('.cs-option').forEach(o => {
+    o.classList.toggle('selected', o.dataset.value === value);
+  });
+}
+
+function csGetValue(id) {
+  return document.getElementById(id + '-btn')?.dataset.value || '';
+}
+
+async function loadVersionsCustom(projectId, gId, lId) {
+  const gWrap = document.getElementById(gId + '-wrap');
+  const lWrap = document.getElementById(lId + '-wrap');
+  const gDrop = document.getElementById(gId + '-drop');
+  const lDrop = document.getElementById(lId + '-drop');
+  const gBtn = document.getElementById(gId + '-btn');
+
+  gBtn.textContent = 'Lädt...';
 
   if (!versionCache[projectId]) {
     try {
       const res = await fetch(`https://api.modrinth.com/v2/project/${projectId}/version`);
       versionCache[projectId] = await res.json();
     } catch(e) {
-      gameSelEl.innerHTML = '<option>Fehler</option>';
-      loaderSelEl.innerHTML = '<option>Fehler</option>';
-      gameSelEl.disabled = false; loaderSelEl.disabled = false;
+      gBtn.textContent = 'Fehler';
+      gWrap.classList.remove('disabled');
       return;
     }
   }
 
   const versions = versionCache[projectId];
-
-  // Unique game versions
   const gameVersions = [...new Set(versions.flatMap(v => v.game_versions))].sort((a,b) => b.localeCompare(a, undefined, {numeric:true}));
-  gameSelEl.innerHTML = '<option value="">MC-Version...</option>' + gameVersions.map(g => `<option value="${g}">${g}</option>`).join('');
-  gameSelEl.disabled = false;
-
-  // Unique loaders
   const loaders = [...new Set(versions.flatMap(v => v.loaders))];
-  loaderSelEl.innerHTML = '<option value="">Loader...</option>' + loaders.map(l => `<option value="${l}">${l.charAt(0).toUpperCase()+l.slice(1)}</option>`).join('');
-  loaderSelEl.disabled = false;
+
+  gDrop.innerHTML = gameVersions.map(g =>
+    `<div class="cs-option" data-value="${g}" onclick="csSetValue('${gId}','${g}','${g}');event.stopPropagation()">${g}</div>`
+  ).join('');
+  gBtn.textContent = 'MC-Version...';
+  gBtn.dataset.value = '';
+  gWrap.classList.remove('disabled');
+
+  lDrop.innerHTML = loaders.map(l =>
+    `<div class="cs-option" data-value="${l}" onclick="csSetValue('${lId}','${l}','${l.charAt(0).toUpperCase()+l.slice(1)}');event.stopPropagation()">${l.charAt(0).toUpperCase()+l.slice(1)}</div>`
+  ).join('');
+  document.getElementById(lId + '-btn').textContent = 'Loader...';
+  document.getElementById(lId + '-btn').dataset.value = '';
+  lWrap.classList.remove('disabled');
+
+  // open game version dropdown right away
+  gWrap.classList.add('open');
 }
 
 function getDownloadUrlForSelection(projectId, gameVer, loader) {
@@ -466,8 +557,8 @@ function getDownloadUrlForSelection(projectId, gameVer, loader) {
 }
 
 function downloadSelected(projectId, gameSelId, loaderSelId, btnEl) {
-  const gameVer = document.getElementById(gameSelId).value;
-  const loader = document.getElementById(loaderSelId).value;
+  const gameVer = csGetValue(gameSelId);
+  const loader = csGetValue(loaderSelId);
   const url = getDownloadUrlForSelection(projectId, gameVer, loader);
   if (!url) {
     btnEl.textContent = 'Keine passende Version!';
@@ -498,13 +589,16 @@ function renderResults(container, hits) {
       <div class="mod-author">von ${h.author}</div>
       <div class="mod-desc">${h.description}</div>
       <div class="mod-downloads">⬇ ${formatNum(h.downloads)} Downloads</div>
-      <select class="version-select" id="${gId}"
-        onfocus="if(!this.dataset.loaded){this.dataset.loaded=1;loadVersions('${h.project_id}',this,document.getElementById('${lId}'))}">
-        <option>MC-Version...</option>
-      </select>
-      <select class="version-select" id="${lId}" style="margin-top:6px">
-        <option>Loader...</option>
-      </select>
+      <div class="selectors-row">
+        <div class="custom-select disabled" id="${gId}-wrap" onclick="csToggle('${gId}');if(!this.dataset.loaded){this.dataset.loaded=1;loadVersionsCustom('${h.project_id}','${gId}','${lId}')}">
+          <button class="cs-btn" id="${gId}-btn">MC-Version...</button>
+          <div class="cs-dropdown" id="${gId}-drop"></div>
+        </div>
+        <div class="custom-select disabled" id="${lId}-wrap">
+          <button class="cs-btn" id="${lId}-btn">Loader...</button>
+          <div class="cs-dropdown" id="${lId}-drop"></div>
+        </div>
+      </div>
       <button class="download-btn" id="${bId}"
         onclick="downloadSelected('${h.project_id}','${gId}','${lId}',this)">
         ⬇ Herunterladen
