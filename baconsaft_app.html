@@ -21,6 +21,13 @@ body {
   position: fixed; inset: 0; z-index: 9999;
   background: linear-gradient(160deg, #d6efff 0%, #b0d9f5 40%, #7bbde8 100%);
   display: flex; align-items: center; justify-content: center;
+  opacity: 1;
+  transition: opacity 1.2s ease;
+  pointer-events: auto;
+}
+#intro-canvas.hiding {
+  opacity: 0;
+  pointer-events: none;
 }
 #intro-canvas canvas {
   position: absolute; inset: 0;
@@ -340,7 +347,7 @@ window.addEventListener('resize', resizeP);
 
 const N = 150;
 let pts = [];
-let mode = 'float'; // float -> gather -> done
+let animRunning = true;
 
 function rand(a,b) { return a + Math.random()*(b-a); }
 
@@ -353,65 +360,56 @@ function initPts() {
       vx: rand(-1.5, 1.5),
       vy: rand(-1.5, 1.5),
       r: rand(3, 9),
-      a: rand(0.4, 0.9),
+      alpha: rand(0.4, 0.9),
+      fadingOut: false,
       color: `hsl(${rand(188,222).toFixed(0)}, ${rand(70,90).toFixed(0)}%, ${rand(55,78).toFixed(0)}%)`,
     });
   }
 }
 
-let gatherT = 0;
-const GATHER_MS = 1200;
-
 function draw() {
+  if (!animRunning) return;
   ctx.clearRect(0, 0, pcanvas.width, pcanvas.height);
-  const cx = pcanvas.width / 2;
-  const cy = pcanvas.height / 2;
-
-  if (mode === 'float') {
-    pts.forEach(p => {
+  let allGone = true;
+  pts.forEach(p => {
+    if (p.fadingOut) {
+      p.alpha -= 0.015;
+      if (p.alpha < 0) p.alpha = 0;
+    } else {
       p.x += p.vx; p.y += p.vy;
       if (p.x < 0 || p.x > pcanvas.width) p.vx *= -1;
       if (p.y < 0 || p.y > pcanvas.height) p.vy *= -1;
-      drawDot(p.x, p.y, p.r, p.color, p.a);
-    });
-  } else if (mode === 'gather') {
-    gatherT += 16;
-    const progress = Math.min(gatherT / GATHER_MS, 1);
-    const ease = progress < 0.5 ? 2*progress*progress : -1+(4-2*progress)*progress;
-    pts.forEach(p => {
-      p.x += (cx - p.x) * 0.04;
-      p.y += (cy - p.y) * 0.04;
-      const alpha = p.a * (1 - ease);
-      if (alpha > 0.01) drawDot(p.x, p.y, p.r * (1 - ease * 0.5), p.color, alpha);
-    });
-    if (progress >= 1) {
-      mode = 'done';
-      // fade out intro overlay
-      introEl.style.transition = 'opacity 0.7s ease';
-      introEl.style.opacity = '0';
-      setTimeout(() => { introEl.style.display = 'none'; }, 750);
-      return;
     }
+    if (p.alpha > 0) {
+      allGone = false;
+      ctx.save();
+      ctx.globalAlpha = p.alpha;
+      ctx.fillStyle = p.color;
+      ctx.shadowBlur = 12;
+      ctx.shadowColor = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+  });
+  if (allGone) {
+    animRunning = false;
+    introEl.classList.add('hiding');
+    setTimeout(() => { introEl.style.display = 'none'; }, 1300);
+    return;
   }
   requestAnimationFrame(draw);
 }
 
-function drawDot(x, y, r, color, a) {
-  ctx.save();
-  ctx.globalAlpha = a;
-  ctx.fillStyle = color;
-  ctx.shadowBlur = 12;
-  ctx.shadowColor = color;
-  ctx.beginPath();
-  ctx.arc(x, y, r, 0, Math.PI*2);
-  ctx.fill();
-  ctx.restore();
-}
-
 initPts();
 draw();
-// after 1.8s start gathering
-setTimeout(() => { mode = 'gather'; }, 1800);
+// after 1.8s fade each particle out randomly in place
+setTimeout(() => {
+  pts.forEach(p => {
+    setTimeout(() => { p.fadingOut = true; }, rand(0, 800));
+  });
+}, 1800);
 
 // ── NAVIGATION ───────────────────────────────────────────────
 function goTo(page) {
