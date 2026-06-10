@@ -238,6 +238,31 @@ input:focus { outline:none !important; box-shadow:none !important; border-color:
   text-align:center; padding:20px 0 28px; font-size:12px; color:#2a6fa8;
   letter-spacing:0.1em; opacity:0.75; font-weight:600;
 }
+
+/* MOBILE RESPONSIVE */
+@media (max-width: 600px) {
+  .logo-wrap img { height: 60px; }
+  .cards-row { flex-direction: column; gap: 14px; }
+  .card { min-height: unset; padding: 16px 12px 12px; }
+  .card-logo img { height: 48px !important; }
+  .home-content { padding-left: 12px; padding-right: 12px; padding-top: 10px; }
+  .search-title { height: 52px !important; }
+  .search-bar-big { padding: 7px 10px; }
+  .search-bar-big input { font-size: 14px; }
+  .results-container { grid-template-columns: 1fr; gap: 12px; }
+  .detail-card { padding: 16px; }
+  .detail-header { flex-direction: column; gap: 12px; }
+  .detail-icon { width: 60px; height: 60px; }
+  .detail-title { font-size: 18px; }
+  .detail-stats { gap: 10px; }
+  .detail-gallery img { max-height: 110px; }
+  .selectors-row { flex-direction: column; gap: 6px; }
+  .custom-select { flex: unset; width: 100%; }
+  #lightbox-close { top: 10px; right: 10px; }
+  .footer { font-size: 11px; }
+  .back-btn { padding: 6px 12px; font-size: 12px; }
+  #author-header { padding: 0 12px; }
+}
 </style>
 </head>
 <body>
