@@ -82,6 +82,7 @@ body{font-family:"Segoe UI",sans-serif;background:url("data:image/png;base64,iVB
 <body>
 <div id="topbar">
   <span id="topbar-title">BaconSaft Creator</span>
+  <button class="tbtn" id="tab-pixel" onclick="showTab('pixel')">&#x1F5BC; Pixel Editor</button>
   <button class="tbtn on"  id="tab-blocks" onclick="showTab('blocks')">&#x1F9F1; Bl&#246;cke</button>
   <button class="tbtn"     id="tab-mobs"   onclick="showTab('mobs')">&#x1F43E; Mobs</button>
   <button class="tbtn"     id="tab-items"  onclick="showTab('items')">&#x1F3F9; Items</button>
@@ -151,6 +152,84 @@ body{font-family:"Segoe UI",sans-serif;background:url("data:image/png;base64,iVB
     </div>
   </div>
 </div>
+<div id="panel-pixel" class="panel">
+  <div style="display:flex;flex:1;overflow:hidden;">
+    <!-- Left: tools -->
+    <div id="px-left" style="width:185px;display:flex;flex-direction:column;background:rgba(215,235,255,0.88);backdrop-filter:blur(10px);border-right:1.5px solid rgba(30,140,220,0.18);">
+      <div style="padding:7px 10px;font-size:11px;font-weight:800;color:#0e3a6a;border-bottom:1px solid rgba(30,140,220,0.12);">Pixel Editor</div>
+      <div style="padding:8px;display:flex;flex-direction:column;gap:5px;overflow-y:auto;flex:1">
+        <div class="rt">Grösse</div>
+        <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">
+          <input id="px-w" type="number" value="16" min="4" max="128" style="width:46px;padding:4px;border:1.5px solid rgba(30,140,220,0.28);border-radius:7px;background:rgba(255,255,255,0.7);color:#1565c0;font-size:11px;font-family:inherit">
+          <span style="font-size:11px;color:#4a7fa8">×</span>
+          <input id="px-h" type="number" value="16" min="4" max="128" style="width:46px;padding:4px;border:1.5px solid rgba(30,140,220,0.28);border-radius:7px;background:rgba(255,255,255,0.7);color:#1565c0;font-size:11px;font-family:inherit">
+          <button class="ab" style="margin:0;padding:4px 8px;font-size:11px" onclick="pxNew()">Neu</button>
+        </div>
+
+        <div class="rt" style="margin-top:4px">Werkzeuge</div>
+        <div class="tg">
+          <button class="tb2 on" id="px-pencil"   onclick="pxTool('pencil')">&#x270F;&#xFE0F;</button>
+          <button class="tb2"    id="px-eraser"   onclick="pxTool('eraser')">&#x1F9F9;</button>
+          <button class="tb2"    id="px-fill"     onclick="pxTool('fill')">&#x1FAA3;</button>
+          <button class="tb2"    id="px-eyedrop"  onclick="pxTool('eyedrop')">&#x1F489;</button>
+          <button class="tb2"    id="px-line"     onclick="pxTool('line')">&#x2571;</button>
+          <button class="tb2"    id="px-rect"     onclick="pxTool('rect')">&#x25AD;</button>
+          <button class="tb2"    id="px-circle"   onclick="pxTool('circle')">&#x25EF;</button>
+          <button class="tb2"    id="px-spray"    onclick="pxTool('spray')">&#x1F32B;&#xFE0F;</button>
+        </div>
+        <div class="rt" style="margin-top:4px">Pinsel</div>
+        <div class="brow">
+          <button class="bb on" id="px-b1" onclick="pxBrush(1)">1</button>
+          <button class="bb" id="px-b2" onclick="pxBrush(2)">2</button>
+          <button class="bb" id="px-b4" onclick="pxBrush(4)">4</button>
+          <button class="bb" id="px-b8" onclick="pxBrush(8)">8</button>
+        </div>
+        <div class="rt" style="margin-top:4px">Farbe</div>
+        <input type="color" id="px-color" value="#1565c0" style="width:100%;height:30px;border-radius:7px;border:2px solid rgba(30,140,220,0.28);cursor:pointer;padding:2px;background:rgba(255,255,255,0.6)">
+        <div class="oprow">
+          <label>Opazit&#228;t</label>
+          <input type="range" id="px-opsl" min="0" max="255" value="255">
+          <span id="px-opv">100%</span>
+        </div>
+        <div class="rt" style="margin-top:4px">Palette</div>
+        <div class="pg" id="px-pg1"></div>
+        <div style="font-size:9px;color:#4a7fa8;margin:3px 0 2px">Minecraft</div>
+        <div class="pg" id="px-pg2"></div>
+        <div class="rt" style="margin-top:4px">Raster</div>
+        <button class="ab" onclick="pxToggleGrid()"># Gitter an/aus</button>
+        <div class="rt" style="margin-top:4px">Aktionen</div>
+        <button class="ab" onclick="pxUndo()">&#x21A9; Undo (Ctrl+Z)</button>
+        <button class="ab" onclick="pxRedo()">&#x21AA; Redo</button>
+        <button class="ab" onclick="pxClear()">&#x1F5D1; Löschen</button>
+        <button class="ab" onclick="pxMirrorH()">&#x21D4; Spiegeln H</button>
+        <button class="ab" onclick="pxMirrorV()">&#x21D5; Spiegeln V</button>
+        <button class="ab pri" onclick="pxDownload()">&#x2193; PNG herunterladen</button>
+      </div>
+    </div>
+    <!-- Center: canvas -->
+    <div id="px-center" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(200,222,248,0.35);position:relative;overflow:auto;min-width:0;">
+      <div id="px-canvaswrap" style="position:relative;margin:auto;padding:20px;">
+        <canvas id="px-mc" style="image-rendering:pixelated;display:block;cursor:crosshair;border:1.5px solid rgba(30,140,220,0.25);border-radius:4px;box-shadow:0 4px 20px rgba(30,100,200,0.15);"></canvas>
+        <canvas id="px-gc" style="position:absolute;top:20px;left:20px;pointer-events:none;image-rendering:pixelated;"></canvas>
+      </div>
+      <!-- Zoom bar at bottom -->
+      <div style="position:absolute;bottom:12px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:6px;background:rgba(210,235,255,0.92);border-radius:10px;padding:5px 12px;border:1.5px solid rgba(30,140,220,0.2);backdrop-filter:blur(8px);">
+        <button class="zbtn" onclick="pxZoom(-2)">&#x2212;</button>
+        <span id="px-zlabel" style="font-size:11px;font-weight:700;color:#1565c0;min-width:30px;text-align:center">8x</span>
+        <button class="zbtn" onclick="pxZoom(2)">+</button>
+        <button class="zbtn" style="font-size:10px;width:auto;padding:0 8px" onclick="pxZoomFit()">&#x21BA; Fit</button>
+      </div>
+    </div>
+    <!-- Right: preview -->
+    <div style="width:160px;display:flex;flex-direction:column;align-items:center;padding:12px;gap:10px;background:rgba(215,235,255,0.88);backdrop-filter:blur(10px);border-left:1.5px solid rgba(30,140,220,0.18);">
+      <div style="font-size:11px;font-weight:700;color:#0e3a6a">Vorschau</div>
+      <canvas id="px-prev" width="128" height="128" style="image-rendering:pixelated;border-radius:8px;border:1.5px solid rgba(30,140,220,0.15);background:repeating-conic-gradient(#ccc 0 25%,#fff 0 50%) 0 0/16px 16px;max-width:100%;"></canvas>
+      <div style="font-size:11px;font-weight:700;color:#0e3a6a;margin-top:4px">Originalgrösse</div>
+      <canvas id="px-orig" style="image-rendering:pixelated;border-radius:6px;border:1.5px solid rgba(30,140,220,0.15);background:repeating-conic-gradient(#ccc 0 25%,#fff 0 50%) 0 0/8px 8px;max-width:136px;max-height:136px;"></canvas>
+    </div>
+  </div>
+</div>
+
 <div id="panel-skin" class="panel">
   <div id="sl">
     <div id="skin-left">
@@ -192,7 +271,9 @@ body{font-family:"Segoe UI",sans-serif;background:url("data:image/png;base64,iVB
     <div id="skin-right">
       <div style="font-size:11px;font-weight:700;color:#0e3a6a">3D Vorschau</div>
       <canvas id="s3d" width="175" height="280"></canvas>
-      <div style="font-size:9px;color:#4a7fa8;text-align:center">Ziehen zum Drehen</div>
+      <div style="font-size:9px;color:#4a7fa8;text-align:center">Ziehen zum Drehen &bull; Scrollen zum Zoomen</div>
+      <button class="ab" id="r3anim-btn" onclick="if(r3Anim){r3StopAnim();this.textContent='&#x25B6; Drehen';}else{r3StartAnim();this.textContent='&#x23F9; Stop';}">&#x25B6; Drehen</button>
+      <button class="ab" onclick="r3Zoom=1;r3X=-15;r3Y=25;r3D()">&#x21BA; Reset</button>
     </div>
   </div>
 </div>
@@ -234,15 +315,21 @@ const UVR={head:{x:8,y:8,w:8,h:8},body:{x:20,y:20,w:8,h:12},arm_r:{x:44,y:20,w:4
 let texType='block',curTex=null,origImg=null,zoom=8,tool='pencil',col='#1565c0',opac=255,brush=1;
 let undoStack=[],redoStack=[],drawing=false,lp0=null,snap=null,modTex={};
 let skinImg=null,sz=6,sTool='pencil',sCol='#c8a060',skinUndo=[],sDraw=false;
-let r3X=-20,r3Y=20,s3drag=false,r3last=null,hlR=null;
+let r3X=-15,r3Y=25,r3Zoom=1.0,s3drag=false,r3last=null,hlR=null;
 const mcEl=document.getElementById('mc');
 const smcEl=document.getElementById('smc');
-const c3=document.getElementById('s3d'),ct3=c3.getContext('2d');
+const c3=document.getElementById('s3d');
 
 function showTab(tab){
   ['blocks','mobs','items','skin','pack'].forEach(t=>document.getElementById('tab-'+t).classList.remove('on'));
   document.getElementById('tab-'+tab).classList.add('on');
-  ['editor','skin','pack'].forEach(p=>document.getElementById('panel-'+p)?.classList.remove('on'));
+  ['editor','skin','pack','pixel'].forEach(p=>{const el=document.getElementById('panel-'+p);if(el)el.classList.remove('on');});
+  if(tab==='pixel'){
+    document.getElementById('panel-pixel').classList.add('on');
+    const mc=document.getElementById('px-mc');
+    if(!mc.getAttribute('data-init')){mc.setAttribute('data-init','1');pxAttach();pxInit();}
+    return;
+  }
   if(tab==='blocks'||tab==='mobs'||tab==='items'){
     document.getElementById('panel-editor').classList.add('on');
     texType=tab;buildGrid();
@@ -357,150 +444,301 @@ smcEl.addEventListener('touchstart',e=>{e.preventDefault();skinUndo.push(skinImg
 smcEl.addEventListener('touchmove',e=>{e.preventDefault();if(!sDraw)return;pSkin(e.touches[0]);},{passive:false});
 smcEl.addEventListener('touchend',()=>sDraw=false);
 
-// 3D Preview - isometric style
-function r3D(){
-  if(!skinImg)return;
-  const W=c3.width, H=c3.height;
-  ct3.clearRect(0,0,W,H);
-  ct3.imageSmoothingEnabled=false;
+// 3D rendering with Three.js
+let _three=null;
 
-  // Simple rotation: only Y axis (left-right)
-  // We draw the visible faces based on rotation angle
-  const angle = ((r3Y % 360) + 360) % 360;
-  const scale = 7; // pixels per skin unit
-  const cx = W/2, cy = 30;
+function _initThree(){
+  if(typeof THREE==='undefined')return false;
+  const W=c3.width,H=c3.height;
+  const renderer=new THREE.WebGLRenderer({canvas:c3,antialias:true,alpha:true});renderer.setPixelRatio(window.devicePixelRatio||1);
+  renderer.setSize(W,H);renderer.setClearColor(0xc8dff5,1);
+  const scene=new THREE.Scene();
+  const camera=new THREE.PerspectiveCamera(50,W/H,0.1,500);
+  camera.position.z=55;
 
-  // Draw a single face from skin coords to screen rect
-  // with optional shade overlay
-  function drawFace(su,sv,sw,sh, dx,dy,dw,dh, shade){
-    if(dw<=0||dh<=0)return;
-    const tmp=document.createElement('canvas');
-    tmp.width=sw; tmp.height=sh;
-    const tc=tmp.getContext('2d');
-    tc.imageSmoothingEnabled=false;
-    tc.drawImage(skinImg,su,sv,sw,sh,0,0,sw,sh);
-    ct3.drawImage(tmp,dx,dy,dw,dh);
-    if(shade>0){
-      ct3.fillStyle='rgba(0,0,0,'+shade+')';
-      ct3.fillRect(dx,dy,dw,dh);
+  // Skin texture from skinImg canvas
+  const tex=new THREE.CanvasTexture(skinImg);
+  tex.magFilter=THREE.NearestFilter;
+  tex.minFilter=THREE.NearestFilter;
+  tex.needsUpdate=true;
+
+  const S=1/64; // UV scale
+
+  // Build a box mesh with correct Minecraft UV layout
+  // ux,uy = UV origin, w,h,d = dimensions
+  // Add ambient + directional light for better look
+  scene.add(new THREE.AmbientLight(0xffffff,0.6));
+  const dlight=new THREE.DirectionalLight(0xffffff,0.8);
+  dlight.position.set(5,10,8);scene.add(dlight);
+
+  function mkBox(cx,cy,cz,w,h,d,ux,uy){
+    const geo=new THREE.BufferGeometry();
+    const x0=-w/2,x1=w/2,y0=-h/2,y1=h/2,z0=-d/2,z1=d/2;
+
+    // 6 faces, each 4 vertices
+    // Front(+z): ux+d, uy+d, w, h
+    // Back(-z):  ux+d+w+d, uy+d, w, h  (flipped)
+    // Right(-x): ux, uy+d, d, h
+    // Left(+x):  ux+d+w, uy+d, d, h
+    // Top(-y):   ux+d, uy, w, d
+    // Bot(+y):   ux+d+w, uy, w, d
+
+    const pos=[];const uv=[];const idx=[];
+    let vi=0;
+    function face(verts,u0,v0,uw,vh){
+      pos.push(...verts);
+      // 4 UV corners: TL,TR,BR,BL
+      uv.push(u0*S,1-(v0)*S, (u0+uw)*S,1-(v0)*S, (u0+uw)*S,1-(v0+vh)*S, u0*S,1-(v0+vh)*S);
+      idx.push(vi,vi+2,vi+1, vi,vi+3,vi+2);
+      vi+=4;
     }
+    // Front
+    face([x0,y1,z1, x1,y1,z1, x1,y0,z1, x0,y0,z1], ux+d,uy+d,w,h);
+    // Back (x flipped)
+    face([x1,y1,z0, x0,y1,z0, x0,y0,z0, x1,y0,z0], ux+d+w+d,uy+d,w,h);
+    // Right (-x)
+    face([x0,y1,z0, x0,y1,z1, x0,y0,z1, x0,y0,z0], ux,uy+d,d,h);
+    // Left (+x)
+    face([x1,y1,z1, x1,y1,z0, x1,y0,z0, x1,y0,z1], ux+d+w,uy+d,d,h);
+    // Top (-y): use bottom UV coords  
+    face([x0,y0,z1, x1,y0,z1, x1,y0,z0, x0,y0,z0], ux+d+w,uy,w,d);
+    // Bot (+y): use top UV coords
+    face([x0,y1,z0, x1,y1,z0, x1,y1,z1, x0,y1,z1], ux+d,uy,w,d);
+
+    geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+    geo.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));
+    geo.setIndex(idx);
+    geo.computeVertexNormals();
+    const mat=new THREE.MeshLambertMaterial({map:tex,transparent:true,alphaTest:0.1,side:THREE.FrontSide});
+    const mesh=new THREE.Mesh(geo,mat);
+    mesh.position.set(cx,cy,cz);
+    return mesh;
   }
 
-  // Determine which sides are visible based on Y rotation
-  const showRight = angle < 180;  // right side of character
-  const sideBlend = Math.abs(Math.sin(r3Y*Math.PI/180));
-  const frontBlend = Math.cos(r3Y*Math.PI/180);
-  const isFront = frontBlend >= 0;
+  const group=new THREE.Group();
+  // Minecraft proportions (units):
+  // Head: 8x8x8, Body: 8x12x4, Arms: 4x12x4, Legs: 4x12x4
+  // Y: head top=24, head bot=16, body top=16, body bot=4, legs bot=-8
+  group.add(mkBox(0,20,0,  8,8,8,  0,0));     // head: center y=20
+  group.add(mkBox(0,10,0,  8,12,4, 16,16));   // body: center y=10
+  group.add(mkBox(-6,10,0, 4,12,4, 40,16));   // right arm
+  group.add(mkBox(6,10,0,  4,12,4, 32,48));   // left arm
+  group.add(mkBox(-2,-2,0, 4,12,4, 0,16));    // right leg
+  group.add(mkBox(2,-2,0,  4,12,4, 16,48));   // left leg
+  group.position.y=-9; // center vertically
+  scene.add(group);
 
-  // Horizontal offset based on rotation (simulates turning)
-  const turnX = Math.sin(r3Y*Math.PI/180) * 8;
-
-  // Character dimensions in pixels
-  const HW=8*scale, BW=8*scale, AW=4*scale, LW=4*scale;
-  const HH=8*scale, BH=12*scale, AH=12*scale, LH=12*scale;
-  const sideW = Math.round(sideBlend * 4*scale);
-  const frontW_head = Math.round(Math.abs(frontBlend) * 8*scale);
-  const frontW_body = Math.round(Math.abs(frontBlend) * 8*scale);
-  const frontW_arm  = Math.round(Math.abs(frontBlend) * 4*scale);
-  const frontW_leg  = Math.round(Math.abs(frontBlend) * 4*scale);
-
-  // Base X positions
-  const bodyX = cx - frontW_body/2 + turnX;
-  const headX = cx - frontW_head/2 + turnX;
-  const armRX = bodyX - frontW_arm - sideW*0.3;
-  const armLX = bodyX + frontW_body;
-  const legRX = bodyX;
-  const legLX = bodyX + frontW_leg;
-
-  // Y positions (stacked vertically)
-  const headY = cy;
-  const bodyY = headY + HH;
-  const legsY = bodyY + BH;
-
-  // UV coords for front/back faces
-  const headFront_u = isFront ? 8 : 24;
-  const bodyFront_u = isFront ? 20 : 32;
-  const armR_u = isFront ? 44 : 52;
-  const armL_u = isFront ? 36 : 44; // layer 2
-  const legR_u = isFront ? 4 : 12;
-  const legL_u = isFront ? 20 : 28;
-
-  // Side UV
-  const headSide_u = showRight ? 16 : 0;
-  const bodySide_u = showRight ? 28 : 16;
-  const armSide_u  = showRight ? 48 : 40;
-  const legSide_u  = showRight ? 8 : 0;
-
-  // Draw top of head
-  const topH = Math.round(Math.abs(Math.sin(r3X*Math.PI/180)) * 4*scale);
-  if(topH > 0){
-    drawFace(8,0,8,8, headX, headY-topH, frontW_head||1, topH, 0.2);
-  }
-
-  // HEAD
-  // Side face
-  if(sideW>0){
-    const sx = showRight ? headX+frontW_head : headX-sideW;
-    drawFace(headSide_u,8,8,8, sx, headY, sideW, HH, showRight?0.25:0.3);
-  }
-  // Front/back face
-  if(frontW_head>0){
-    drawFace(headFront_u,8,8,8, headX, headY, frontW_head, HH, isFront?0:0.15);
-  }
-
-  // RIGHT ARM
-  if(sideW>0){
-    const sx = showRight ? armRX-sideW*0.5 : armRX+frontW_arm;
-    drawFace(armSide_u,20,4,12, showRight?armRX-sideW:armRX+frontW_arm, bodyY, sideW, AH, showRight?0.25:0.3);
-  }
-  if(frontW_arm>0){
-    drawFace(armR_u,20,4,12, armRX, bodyY, frontW_arm, AH, isFront?0:0.15);
-  }
-
-  // BODY
-  if(sideW>0){
-    const sx = showRight ? bodyX+frontW_body : bodyX-sideW;
-    drawFace(bodySide_u,20,4,12, sx, bodyY, sideW, BH, showRight?0.25:0.3);
-  }
-  if(frontW_body>0){
-    drawFace(bodyFront_u,20,8,12, bodyX, bodyY, frontW_body, BH, isFront?0:0.15);
-  }
-
-  // LEFT ARM
-  if(sideW>0){
-    const sx = showRight ? armLX+frontW_arm : armLX-sideW;
-    drawFace(armSide_u,52,4,12, showRight?armLX+frontW_arm:armLX-sideW, bodyY, sideW, AH, showRight?0.3:0.25);
-  }
-  if(frontW_arm>0){
-    drawFace(armL_u,52,4,12, armLX, bodyY, frontW_arm, AH, isFront?0:0.15);
-  }
-
-  // RIGHT LEG
-  if(sideW>0){
-    drawFace(legSide_u,20,4,12, showRight?legRX-sideW:legRX+frontW_leg, legsY, sideW, LH, showRight?0.25:0.3);
-  }
-  if(frontW_leg>0){
-    drawFace(legR_u,20,4,12, legRX, legsY, frontW_leg, LH, isFront?0:0.15);
-  }
-
-  // LEFT LEG
-  if(sideW>0){
-    drawFace(legSide_u,20,4,12, showRight?legLX+frontW_leg:legLX-sideW, legsY, sideW, LH, showRight?0.3:0.25);
-  }
-  if(frontW_leg>0){
-    drawFace(legL_u,52,4,12, legLX, legsY, frontW_leg, LH, isFront?0:0.15);
-  }
+  _three={renderer,scene,camera,group,tex};
+  return true;
 }
 
-c3.addEventListener('mousedown',e=>{s3drag=true;r3last={x:e.clientX,y:e.clientY};c3.style.cursor='grabbing';});
-c3.addEventListener('mousemove',e=>{if(!s3drag)return;r3Y+=(e.clientX-r3last.x)*0.5;r3X+=(e.clientY-r3last.y)*0.5;r3X=Math.max(-45,Math.min(45,r3X));r3last={x:e.clientX,y:e.clientY};r3D();});
-c3.addEventListener('mouseup',()=>{s3drag=false;c3.style.cursor='grab';});c3.addEventListener('mouseleave',()=>{s3drag=false;c3.style.cursor='grab';});
+function r3D(){
+  if(!skinImg)return;
+
+  // Load Three.js if needed
+  if(typeof THREE==='undefined'){
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+    s.onload=()=>{
+      if(_initThree())_doRender();
+    };
+    document.head.appendChild(s);
+    return;
+  }
+
+  if(!_three&&!_initThree())return;
+  // Update texture
+  _three.tex.image=skinImg;
+  _three.tex.needsUpdate=true;
+  _doRender();
+}
+
+function _doRender(){
+  if(!_three)return;
+  const{renderer,scene,camera,group}=_three;
+  group.rotation.y=r3Y*Math.PI/180;
+  group.rotation.x=r3X*Math.PI/180;
+  const s=r3Zoom;group.scale.set(s,s,s);
+  renderer.render(scene,camera);
+}
+
+let r3Anim=null;
+function r3StartAnim(){if(!r3Anim)r3Anim=setInterval(()=>{r3Y+=1;_doRender&&_doRender();},20);}
+function r3StopAnim(){clearInterval(r3Anim);r3Anim=null;}
+
+
+
+c3.addEventListener('mousedown',e=>{r3StopAnim();s3drag=true;r3last={x:e.clientX,y:e.clientY};c3.style.cursor='grabbing';});
+c3.addEventListener('mousemove',e=>{if(!s3drag)return;r3Y+=(e.clientX-r3last.x)*0.6;r3X+=(e.clientY-r3last.y)*0.6;r3X=Math.max(-60,Math.min(60,r3X));r3last={x:e.clientX,y:e.clientY};r3D();});
+c3.addEventListener('mouseup',()=>{s3drag=false;c3.style.cursor='grab';});
+c3.addEventListener('mouseleave',()=>{s3drag=false;c3.style.cursor='grab';});
+c3.addEventListener('wheel',e=>{e.preventDefault();r3Zoom=Math.max(0.4,Math.min(2.5,r3Zoom-(e.deltaY>0?0.1:-0.1)));r3D();},{passive:false});
 
 // PACK
 function updML(){const keys=Object.keys(modTex);document.getElementById('mcnt').textContent=keys.length;const l=document.getElementById('mlist');l.innerHTML='';if(!keys.length){l.innerHTML='<div style="font-size:11px;color:#4a7fa8">Noch keine gespeichert.</div>';return;}keys.forEach(k=>{const row=document.createElement('div');row.className='mi';const img=document.createElement('img');img.src='data:image/png;base64,'+modTex[k];row.appendChild(img);const sp=document.createElement('span');sp.style.cssText='font-size:11px;color:#1565c0;flex:1';sp.textContent=k.split('/').pop();row.appendChild(sp);const btn=document.createElement('button');btn.style.cssText='background:none;border:none;cursor:pointer;color:#e05050;font-size:12px';btn.textContent='X';btn.onclick=()=>{delete modTex[k];updML();};row.appendChild(btn);l.appendChild(row);});}
 async function dlPack(){const name=document.getElementById('pname').value||'MeinResourcePack';const desc=document.getElementById('pdesc').value||'BaconSaft Creator';const fmt=document.getElementById('pver').value;if(!window.JSZip){const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';document.head.appendChild(s);await new Promise(r=>s.onload=r);}const zip=new JSZip();zip.file('pack.mcmeta',JSON.stringify({pack:{pack_format:parseInt(fmt),description:desc}},null,2));Object.entries(modTex).forEach(([p,b])=>zip.file(p,b,{base64:true}));const blob=await zip.generateAsync({type:'blob'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name.replace(/\s+/g,'_')+'.zip';a.click();}
 
-document.addEventListener('keydown',e=>{if(e.ctrlKey&&e.key==='z'){e.preventDefault();doUndo();}else if(e.ctrlKey&&e.key==='y'){e.preventDefault();doRedo();}else if(e.ctrlKey&&e.key==='s'){e.preventDefault();doSave();}else if(!e.ctrlKey){const m={p:'pencil',e:'eraser',f:'fill',i:'eyedrop',l:'line',r:'rect',c:'circle',s:'spray'};if(m[e.key.toLowerCase()])sT(m[e.key.toLowerCase()]);}});
+
+// ── PIXEL EDITOR ─────────────────────────────────────────────
+let pxW=16,pxH=16,pxZm=8,pxTl='pencil',pxCol='#1565c0',pxOp=255,pxBr=1;
+let pxUndo_=[],pxRedo_=[],pxDraw=false,pxLp=null,pxSnap=null,pxGrid=true;
+const pxMC=()=>document.getElementById('px-mc');
+const pxGC=()=>document.getElementById('px-gc');
+
+function pxInit(){
+  const mc=pxMC(),gc=pxGC();
+  mc.width=pxW*pxZm; mc.height=pxH*pxZm;
+  gc.width=pxW*pxZm; gc.height=pxH*pxZm;
+  const ctx=mc.getContext('2d');
+  // checkerboard background
+  for(let y=0;y<pxH;y++)for(let x=0;x<pxW;x++){
+    ctx.fillStyle=((x+y)%2===0)?'#ccc':'#fff';
+    ctx.fillRect(x*pxZm,y*pxZm,pxZm,pxZm);
+  }
+  pxDrawGrid();pxUpdatePrev();
+}
+
+function pxNew(){
+  pxW=parseInt(document.getElementById('px-w').value)||16;
+  pxH=parseInt(document.getElementById('px-h').value)||16;
+  pxUndo_=[];pxRedo_=[];
+  pxInit();
+}
+
+function pxDrawGrid(){
+  const gc=pxGC();if(!gc)return;
+  const ctx=gc.getContext('2d');
+  ctx.clearRect(0,0,gc.width,gc.height);
+  if(!pxGrid||pxZm<3)return;
+  ctx.strokeStyle='rgba(0,0,0,0.12)';ctx.lineWidth=0.5;
+  for(let x=0;x<=pxW;x++){ctx.beginPath();ctx.moveTo(x*pxZm,0);ctx.lineTo(x*pxZm,pxH*pxZm);ctx.stroke();}
+  for(let y=0;y<=pxH;y++){ctx.beginPath();ctx.moveTo(0,y*pxZm);ctx.lineTo(pxW*pxZm,y*pxZm);ctx.stroke();}
+}
+
+function pxToggleGrid(){pxGrid=!pxGrid;pxDrawGrid();}
+
+function pxUpdatePrev(){
+  const mc=pxMC();if(!mc)return;
+  const pv=document.getElementById('px-prev');
+  const og=document.getElementById('px-orig');
+  if(pv){pv.getContext('2d').clearRect(0,0,128,128);pv.getContext('2d').drawImage(mc,0,0,128,128);}
+  if(og){
+    const s=Math.min(136/pxW,136/pxH,8);
+    og.width=pxW*s;og.height=pxH*s;
+    og.getContext('2d').drawImage(mc,0,0,pxW*s,pxH*s);
+  }
+}
+
+function pxZoom(d){
+  const mc=pxMC(),gc=pxGC();if(!mc)return;
+  const tmp=document.createElement('canvas');tmp.width=pxW;tmp.height=pxH;
+  tmp.getContext('2d').drawImage(mc,0,0,pxW,pxH);
+  pxZm=Math.max(1,Math.min(64,pxZm+d));
+  mc.width=pxW*pxZm;mc.height=pxH*pxZm;
+  gc.width=pxW*pxZm;gc.height=pxH*pxZm;
+  const ctx=mc.getContext('2d');ctx.imageSmoothingEnabled=false;ctx.drawImage(tmp,0,0,pxW*pxZm,pxH*pxZm);
+  const lbl=document.getElementById('px-zlabel');if(lbl)lbl.textContent=pxZm+'x';
+  pxDrawGrid();
+}
+
+function pxZoomFit(){
+  const center=document.getElementById('px-center');
+  const avail=center?Math.min(center.clientWidth-60,center.clientHeight-80):400;
+  pxZm=Math.max(1,Math.min(64,Math.floor(avail/Math.max(pxW,pxH))));
+  pxZoom(0);
+}
+
+function pxTool(t){pxTl=t;document.querySelectorAll('[id^="px-"][id$="pencil"],[id^="px-"][id$="eraser"],[id^="px-"][id$="fill"],[id^="px-"][id$="eyedrop"],[id^="px-"][id$="line"],[id^="px-"][id$="rect"],[id^="px-"][id$="circle"],[id^="px-"][id$="spray"]').forEach(b=>b.classList.remove('on'));document.getElementById('px-'+t)?.classList.add('on');}
+function pxBrush(s){pxBr=s;document.querySelectorAll('#px-b1,#px-b2,#px-b4,#px-b8').forEach(b=>b.classList.remove('on'));document.getElementById('px-b'+s)?.classList.add('on');}
+
+document.getElementById('px-color').addEventListener('input',e=>{pxCol=e.target.value;});
+document.getElementById('px-opsl').addEventListener('input',e=>{pxOp=parseInt(e.target.value);document.getElementById('px-opv').textContent=Math.round(pxOp/255*100)+'%';});
+
+function pxGetXY(e){
+  const mc=pxMC(),r=mc.getBoundingClientRect();
+  const cx=(e.clientX!=null?e.clientX:e.touches[0].clientX)-r.left;
+  const cy=(e.clientY!=null?e.clientY:e.touches[0].clientY)-r.top;
+  return{px:Math.floor(cx/r.width*mc.width),py:Math.floor(cy/r.height*mc.height),tx:Math.floor(cx/r.width*mc.width/pxZm),ty:Math.floor(cy/r.height*mc.height/pxZm)};
+}
+
+function pxPaint(ctx,tx,ty){
+  const half=Math.floor(pxBr/2);
+  const{r,g,b}=h2r(pxCol);
+  for(let dy=-half;dy<=half;dy++)for(let dx=-half;dx<=half;dx++){
+    const nx=tx+dx,ny=ty+dy;
+    if(nx<0||nx>=pxW||ny<0||ny>=pxH)continue;
+    if(pxTl==='eraser')ctx.clearRect(nx*pxZm,ny*pxZm,pxZm,pxZm);
+    else{ctx.fillStyle='rgba('+r+','+g+','+b+','+pxOp/255+')';ctx.fillRect(nx*pxZm,ny*pxZm,pxZm,pxZm);}
+  }
+}
+
+function pxFill(ctx,mc,sx,sy){
+  const w=mc.width,h=mc.height,id=ctx.getImageData(0,0,w,h),d=id.data;
+  const i=(sy*w+sx)*4,tr=d[i],tg=d[i+1],tb=d[i+2],ta=d[i+3];
+  const{r:fr,g:fg,b:fb}=h2r(pxCol);
+  if(tr===fr&&tg===fg&&tb===fb&&ta===pxOp)return;
+  const stk=[[sx,sy]],vis=new Set();
+  while(stk.length){const[x,y]=stk.pop();const k=x+','+y;if(vis.has(k)||x<0||x>=w||y<0||y>=h)continue;vis.add(k);const j=(y*w+x)*4;if(d[j]!==tr||d[j+1]!==tg||d[j+2]!==tb||d[j+3]!==ta)continue;d[j]=fr;d[j+1]=fg;d[j+2]=fb;d[j+3]=pxOp;stk.push([x+1,y],[x-1,y],[x,y+1],[x,y-1]);}
+  ctx.putImageData(id,0,0);
+}
+
+function pxSaveU(){const mc=pxMC();if(!mc)return;pxUndo_.push(mc.getContext('2d').getImageData(0,0,mc.width,mc.height));if(pxUndo_.length>40)pxUndo_.shift();pxRedo_=[];}
+
+function pxOnDown(e){
+  const mc=pxMC();if(!mc)return;e.preventDefault();
+  const ctx=mc.getContext('2d'),{tx,ty,px,py}=pxGetXY(e);
+  if(pxTl==='eyedrop'){const p2=ctx.getImageData(px,py,1,1).data;if(p2[3]>0){pxCol=r2h(p2[0],p2[1],p2[2]);document.getElementById('px-color').value=pxCol;}return;}
+  pxSaveU();pxDraw=true;
+  if(pxTl==='fill'){pxFill(ctx,mc,px,py);pxDraw=false;pxUpdatePrev();return;}
+  if(pxTl==='line'||pxTl==='rect'||pxTl==='circle'){pxLp={tx,ty};pxSnap=ctx.getImageData(0,0,mc.width,mc.height);return;}
+  if(pxTl==='spray'){const{r,g,b}=h2r(pxCol);for(let i=0;i<15;i++){const ox=Math.round((Math.random()-.5)*pxBr*4),oy=Math.round((Math.random()-.5)*pxBr*4);ctx.fillStyle='rgba('+r+','+g+','+b+','+(pxOp/255*Math.random())+')';ctx.fillRect((tx+ox)*pxZm,(ty+oy)*pxZm,pxZm,pxZm);}pxUpdatePrev();return;}
+  pxPaint(ctx,tx,ty);pxUpdatePrev();
+}
+
+function pxOnMove(e){
+  const mc=pxMC();if(!pxDraw||!mc)return;e.preventDefault();
+  const ctx=mc.getContext('2d'),{tx,ty}=pxGetXY(e);
+  if(pxLp&&(pxTl==='line'||pxTl==='rect'||pxTl==='circle')){
+    if(pxSnap)ctx.putImageData(pxSnap,0,0);
+    if(pxTl==='line'){const{r,g,b}=h2r(pxCol);ctx.fillStyle='rgba('+r+','+g+','+b+','+pxOp/255+')';const dx=Math.abs(tx-pxLp.tx),dy=Math.abs(ty-pxLp.ty),sx2=pxLp.tx<tx?1:-1,sy2=pxLp.ty<ty?1:-1;let x0=pxLp.tx,y0=pxLp.ty,err=dx-dy;while(true){ctx.fillRect(x0*pxZm,y0*pxZm,pxZm,pxZm);if(x0===tx&&y0===ty)break;const e2=2*err;if(e2>-dy){err-=dy;x0+=sx2;}if(e2<dx){err+=dx;y0+=sy2;}}}
+    else if(pxTl==='rect'){const{r,g,b}=h2r(pxCol);ctx.strokeStyle='rgba('+r+','+g+','+b+','+pxOp/255+')';ctx.lineWidth=Math.max(1,pxZm/2);ctx.strokeRect(pxLp.tx*pxZm,pxLp.ty*pxZm,(tx-pxLp.tx+1)*pxZm,(ty-pxLp.ty+1)*pxZm);}
+    else{const cx2=(pxLp.tx+tx)/2*pxZm,cy2=(pxLp.ty+ty)/2*pxZm,rx2=Math.abs(tx-pxLp.tx)/2*pxZm,ry2=Math.abs(ty-pxLp.ty)/2*pxZm;const{r,g,b}=h2r(pxCol);ctx.strokeStyle='rgba('+r+','+g+','+b+','+pxOp/255+')';ctx.lineWidth=Math.max(1,pxZm/2);ctx.beginPath();ctx.ellipse(cx2,cy2,rx2||1,ry2||1,0,0,Math.PI*2);ctx.stroke();}
+    pxUpdatePrev();return;
+  }
+  if(pxTl==='spray'){const{r,g,b}=h2r(pxCol);for(let i=0;i<10;i++){const ox=Math.round((Math.random()-.5)*pxBr*4),oy=Math.round((Math.random()-.5)*pxBr*4);ctx.fillStyle='rgba('+r+','+g+','+b+','+(pxOp/255*Math.random())+')';ctx.fillRect((tx+ox)*pxZm,(ty+oy)*pxZm,pxZm,pxZm);}pxUpdatePrev();return;}
+  pxPaint(ctx,tx,ty);pxUpdatePrev();
+}
+
+function pxOnUp(){pxDraw=false;pxLp=null;pxSnap=null;pxUpdatePrev();}
+
+function pxUndo(){const mc=pxMC();if(!pxUndo_.length||!mc)return;pxRedo_.push(mc.getContext('2d').getImageData(0,0,mc.width,mc.height));mc.getContext('2d').putImageData(pxUndo_.pop(),0,0);pxUpdatePrev();}
+function pxRedo(){const mc=pxMC();if(!pxRedo_.length||!mc)return;pxUndo_.push(mc.getContext('2d').getImageData(0,0,mc.width,mc.height));mc.getContext('2d').putImageData(pxRedo_.pop(),0,0);pxUpdatePrev();}
+function pxClear(){const mc=pxMC();if(!mc)return;pxSaveU();const ctx=mc.getContext('2d');ctx.clearRect(0,0,mc.width,mc.height);for(let y=0;y<pxH;y++)for(let x=0;x<pxW;x++){ctx.fillStyle=((x+y)%2===0)?'#ccc':'#fff';ctx.fillRect(x*pxZm,y*pxZm,pxZm,pxZm);}pxUpdatePrev();}
+function pxMirrorH(){const mc=pxMC();if(!mc)return;pxSaveU();const tmp=document.createElement('canvas');tmp.width=mc.width;tmp.height=mc.height;tmp.getContext('2d').drawImage(mc,0,0);const ctx=mc.getContext('2d');ctx.save();ctx.scale(-1,1);ctx.drawImage(tmp,-mc.width,0);ctx.restore();pxUpdatePrev();}
+function pxMirrorV(){const mc=pxMC();if(!mc)return;pxSaveU();const tmp=document.createElement('canvas');tmp.width=mc.width;tmp.height=mc.height;tmp.getContext('2d').drawImage(mc,0,0);const ctx=mc.getContext('2d');ctx.save();ctx.scale(1,-1);ctx.drawImage(tmp,0,-mc.height);ctx.restore();pxUpdatePrev();}
+function pxDownload(){
+  const mc=pxMC();if(!mc)return;
+  const tmp=document.createElement('canvas');tmp.width=pxW;tmp.height=pxH;
+  const ctx=tmp.getContext('2d');ctx.clearRect(0,0,pxW,pxH);ctx.drawImage(mc,0,0,pxW,pxH);
+  const a=document.createElement('a');a.href=tmp.toDataURL('image/png');a.download='pixel-art.png';a.click();
+}
+
+// Attach pixel canvas events after DOM ready
+function pxAttach(){
+  const mc=document.getElementById('px-mc');if(!mc)return;
+  mc.addEventListener('mousedown',pxOnDown);mc.addEventListener('mousemove',pxOnMove);mc.addEventListener('mouseup',pxOnUp);mc.addEventListener('mouseleave',pxOnUp);
+  mc.addEventListener('touchstart',pxOnDown,{passive:false});mc.addEventListener('touchmove',pxOnMove,{passive:false});mc.addEventListener('touchend',pxOnUp);
+  // Mouse wheel zoom
+  document.getElementById('px-center').addEventListener('wheel',e=>{
+    e.preventDefault();
+    pxZoom(e.deltaY<0?2:-2);
+  },{passive:false});
+  mkP(P1,'px-pg1',false);mkP(P2,'px-pg2',false);
+  // Auto fit on first open
+  setTimeout(pxZoomFit,50);
+}
+
+document.addEventListener('keydown',e=>{if(e.ctrlKey&&e.key==='z'){e.preventDefault();if(document.getElementById('panel-pixel').classList.contains('on'))pxUndo();else doUndo();}else if(e.ctrlKey&&e.key==='y'){e.preventDefault();doRedo();}else if(e.ctrlKey&&e.key==='s'){e.preventDefault();doSave();}else if(!e.ctrlKey){const m={p:'pencil',e:'eraser',f:'fill',i:'eyedrop',l:'line',r:'rect',c:'circle',s:'spray'};if(m[e.key.toLowerCase()])sT(m[e.key.toLowerCase()]);}});
 function notify(msg){const n=document.createElement('div');n.className='notif';n.textContent=msg;document.body.appendChild(n);setTimeout(()=>n.remove(),2200);}
 window.addEventListener('load',()=>{
   const params=new URLSearchParams(window.location.search);
