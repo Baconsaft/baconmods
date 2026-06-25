@@ -1,0 +1,14 @@
+# BaconMod robots.txt
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://baconsaft.github.io/baconmods/sitemap.xml
+
+# Google
+User-agent: Googlebot
+Allow: /
+
+# Bing
+User-agent: Bingbot
+Allow: /
